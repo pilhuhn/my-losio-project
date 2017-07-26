@@ -21,17 +21,33 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import io.opentracing.ActiveSpan;
+import javax.inject.Inject;
+import io.opentracing.Tracer;
 
 @Path("/")
 public class GreetingEndpoint {
 
-    private static final String template = "Hello, %s!";
+	private static final String template = "Hello, %s!";
 
-    @GET
-    @Path("/greeting")
-    @Produces("application/json")
-    public Greeting greeting(@QueryParam("name") String name) {
-        String suffix = name != null ? name : "World";
-        return new Greeting(String.format(template, suffix));
-    }
+	@Inject
+	Tracer tracer;
+
+	@GET
+	@Path("/greeting")
+	@Produces("application/json")
+	public Greeting greeting(@QueryParam("name") String name) {
+		String suffix = name != null ? name : "World";
+		return new Greeting(String.format(template, suffix));
+	}
+
+	@GET
+	@Path("/myAction")
+	public String action() {
+		try (ActiveSpan span = tracer.buildSpan("myAction").startActive()) {
+			span.setTag("myTag", "myVal");
+			System.out.println(" TODO your code goes here.");
+			return "Success  ";
+		}
+	}
 }
